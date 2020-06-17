@@ -34,6 +34,10 @@
 #include "uci.h"
 
 
+bool SkipLoadingEval;
+char EvalDir[INPUT_SIZE];
+
+
 // Parses the time controls
 static void ParseTimeControl(char *str, Color color) {
 
@@ -134,6 +138,16 @@ static void UCISetOption(Engine *engine, char *str) {
     } else if (OptionName(str, "NoobBook")) {
 
         noobbook = !strncmp(OptionValue(str), "true", 4);
+
+    // Toggles probing of Chess Cloud Database
+    } else if (OptionName(str, "SkipLoadingEval")) {
+
+        SkipLoadingEval = !strncmp(OptionValue(str), "true", 4);
+
+    // Toggles probing of Chess Cloud Database
+    } else if (OptionName(str, "EvalDir")) {
+
+        strncpy(EvalDir, OptionValue(str), INPUT_SIZE);
 
     // Sets evaluation parameters (dev mode)
     } else

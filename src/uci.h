@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "threads.h"
 #include "types.h"
 #include <string.h>
 
@@ -26,6 +27,10 @@
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define INPUT_SIZE 4096
+
+
+extern bool SkipLoadingEval;
+extern char EvalDir[INPUT_SIZE];
 
 
 typedef struct {

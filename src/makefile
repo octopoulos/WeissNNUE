@@ -18,7 +18,17 @@
 
 # General
 EXE    = weiss
-SRC    = *.cpp *.c fathom/tbprobe.c noobprobe/noobprobe.c
+SRC    = *.cpp *.c fathom/tbprobe.c noobprobe/noobprobe.c \
+	eval/evaluate_mir_inv_tools.cpp \
+	eval/nnue/evaluate_nnue.cpp \
+	eval/nnue/evaluate_nnue_learner.cpp \
+	eval/nnue/features/half_kp.cpp \
+	eval/nnue/features/half_relative_kp.cpp \
+	eval/nnue/features/k.cpp \
+	eval/nnue/features/p.cpp \
+	eval/nnue/features/castling_right.cpp \
+	eval/nnue/features/enpassant.cpp \
+	eval/nnue/nnue_test_command.cpp
 OUT    = ../bin/
 COMP   = g++
 
@@ -28,9 +38,9 @@ POPCNT = -msse3 -mpopcnt
 PEXT   = $(POPCNT) -DUSE_PEXT -mbmi2
 
 # Flags
-STD    = -std=c++11
+STD    = -std=c++14 -DEVAL_NNUE
 LIBS   = -pthread -lm
-WARN   = -Wall -Wextra -Wshadow
+WARN   = -Wall -Wextra -Wshadow -Wno-format
 
 CFLAGS = $(STD) $(WARN) -O3 -flto -march=native
 RFLAGS = $(STD) $(WARN) -O3 -flto -static

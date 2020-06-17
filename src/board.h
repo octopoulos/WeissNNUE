@@ -19,9 +19,14 @@
 #pragma once
 
 #include "types.h"
+#include "evaluate.h"
+#include <string>
+#include <iostream>
+
+#include "eval/nnue/nnue_accumulator.h"
 
 
-typedef struct {
+typedef struct StateInfo {
     Key posKey;
     Move move;
     uint8_t epSquare;
@@ -29,9 +34,34 @@ typedef struct {
     uint8_t castlingRights;
     uint8_t padding; // not used
     int eval;
-} History;
+
+    StateInfo *previous;
+
+#if defined(EVAL_NNUE)
+    Eval::NNUE::Accumulator accumulator;
+
+    // �]���l�̍����v�Z�̊Ǘ��p
+    Eval::DirtyPiece dirtyPiece;
+#endif  // defined(EVAL_NNUE)
+
+} StateInfo;
 
 typedef struct Position {
+
+#if defined(EVAL_NNUE) || defined(EVAL_LEARN)
+    // --- StateInfo
+    StateInfo* state() const { return st; }
+    const Eval::EvalList* eval_list() const { return &evalList; }
+#endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
+
+#if defined(EVAL_NNUE)
+    // �Տ��sq�̏��ɂ�����PieceNumber��Ԃ��B
+    PieceNumber piece_no_of(Square sq) const;
+
+    Color side_to_move() const { return stm; };
+
+    Piece piece_on(Square sq) const { return board[sq]; };
+#endif  // defined(EVAL_NNUE)
 
     uint8_t board[64];
     Bitboard pieceBB[TYPE_NB];
@@ -54,7 +84,13 @@ typedef struct Position {
 
     Key key;
 
-    History gameHistory[MAXGAMEMOVES];
+    StateInfo gameHistory[MAXGAMEMOVES];
+    StateInfo *st;
+
+#if defined(EVAL_NNUE) || defined(EVAL_LEARN)
+    // �]���֐��ŗp�����̃��X�g
+    Eval::EvalList evalList;
+#endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
 
 } Position;
 

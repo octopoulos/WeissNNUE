@@ -79,8 +79,6 @@ static inline PieceType TypeOfPiece(int piece) {
   return (PieceType)(piece & 7);
 }
 
-typedef int32_t Value;
-
 typedef struct Pos
 {
     uint64_t white;

@@ -16,6 +16,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <set>
 #include <stdlib.h>
 
 #include "bitboard.h"
@@ -251,6 +252,132 @@ int EvalPosition(const Position *pos) {
     return (sideToMove == WHITE ? eval : -eval) + Tempo;
 }
 
-int Eval::evaluate(const Position *pos) {
-    return EvalPosition(pos);
+#ifndef EVAL_NNUE
+Value Eval::evaluate(const Position *pos) {
+    return (Value)EvalPosition(pos);
 }
+#endif
+
+#if defined(EVAL_NNUE) || defined(EVAL_LEARN)
+namespace Eval {
+ExtBonaPiece kpp_board_index[PIECE_NB] = {
+    { BONA_PIECE_ZERO, BONA_PIECE_ZERO },
+    { f_pawn, e_pawn },
+    { f_knight, e_knight },
+    { f_bishop, e_bishop },
+    { f_rook, e_rook },
+    { f_queen, e_queen },
+    { f_king, e_king },
+    { BONA_PIECE_ZERO, BONA_PIECE_ZERO },
+
+    // ��肩�猩���ꍇ�Bf��e������ւ��B
+    { BONA_PIECE_ZERO, BONA_PIECE_ZERO },
+    { e_pawn, f_pawn },
+    { e_knight, f_knight },
+    { e_bishop, f_bishop },
+    { e_rook, f_rook },
+    { e_queen, f_queen },
+    { e_king, f_king },
+    { BONA_PIECE_ZERO, BONA_PIECE_ZERO }, // ���̐���͂Ȃ�
+};
+
+// �����ŕێ����Ă���pieceListFw[]��������BonaPiece�ł��邩����������B
+// �� : �f�o�b�O�p�B�x���B
+bool EvalList::is_valid(const Position& pos)
+{
+  std::set<PieceNumber> piece_numbers;
+  for (Square sq = A1; sq != SQUARE_NB; ++sq) {
+    auto piece_number = piece_no_of_board(sq);
+    if (piece_number == PIECE_NUMBER_NB) {
+      continue;
+    }
+    assert(!piece_numbers.count(piece_number));
+    piece_numbers.insert(piece_number);
+  }
+
+  for (int i = 0; i < length(); ++i)
+  {
+    BonaPiece fw = pieceListFw[i];
+    // ����fw���{���ɑ��݂��邩��Position�N���X�̂ق��ɒ��ׂɍs���B
+
+    if (fw == Eval::BONA_PIECE_ZERO) {
+      continue;
+    }
+
+    // �͈͊O
+    if (!(0 <= fw && fw < fe_end))
+      return false;
+
+    // �Տ�̋�Ȃ̂ł��̋�{���ɑ��݂��邩���ׂɂ����B
+    for (Piece pc = NO_PIECE; pc < PIECE_NB; ++pc)
+    {
+      auto pt = type_of(pc);
+      if (pt == NO_PIECE || pt == 7) // ���݂��Ȃ���
+        continue;
+
+      // ��pc��BonaPiece�̊J�n�ԍ�
+      auto s = BonaPiece(kpp_board_index[pc].fw);
+      if (s <= fw && fw < s + SQUARE_NB)
+      {
+        // ���������̂ł��̋sq�̒n�_�ɂ��邩�𒲂ׂ�B
+        Square sq = (Square)(fw - s);
+        Piece pc2 = pos.piece_on(sq);
+
+        if (pc2 != pc)
+          return false;
+
+        goto Found;
+      }
+    }
+    // ���̂����݂��Ȃ���ł�����..
+    return false;
+  Found:;
+  }
+
+  // Validate piece_no_list_board
+  for (Square sq = SQUARE_ZERO; sq < SQUARE_NB; ++sq) {
+    Piece expected_piece = pos.piece_on(sq);
+    PieceNumber piece_number = piece_no_list_board[sq];
+    if (piece_number == PIECE_NUMBER_NB) {
+      assert(expected_piece == NO_PIECE);
+      if (expected_piece != NO_PIECE) {
+        return false;
+      }
+      continue;
+    }
+
+    BonaPiece bona_piece_white = pieceListFw[piece_number];
+    Piece actual_piece;
+    for (actual_piece = NO_PIECE; actual_piece < PIECE_NB; ++actual_piece) {
+      if (kpp_board_index[actual_piece].fw == BONA_PIECE_ZERO) {
+        continue;
+      }
+
+      if (kpp_board_index[actual_piece].fw <= bona_piece_white
+        && bona_piece_white < kpp_board_index[actual_piece].fw + SQUARE_NB) {
+        break;
+      }
+    }
+
+    assert(actual_piece != PIECE_NB);
+    if (actual_piece == PIECE_NB) {
+      return false;
+    }
+
+    assert(actual_piece == expected_piece);
+    if (actual_piece != expected_piece) {
+      return false;
+    }
+
+    Square actual_square = static_cast<Square>(
+      bona_piece_white - kpp_board_index[actual_piece].fw);
+    assert(sq == actual_square);
+    if (sq != actual_square) {
+      return false;
+    }
+  }
+
+  return true;
+}
+}
+#endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
