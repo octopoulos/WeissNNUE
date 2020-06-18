@@ -50,7 +50,7 @@ typedef struct Position {
 
 #if defined(EVAL_NNUE) || defined(EVAL_LEARN)
     // --- StateInfo
-    StateInfo* state() const { return st; }
+    StateInfo* state() const { return const_cast<StateInfo *>(&gameHistory[histPly]); }
     const Eval::EvalList* eval_list() const { return &evalList; }
 #endif  // defined(EVAL_NNUE) || defined(EVAL_LEARN)
 
@@ -86,7 +86,6 @@ typedef struct Position {
     Key key;
 
     StateInfo gameHistory[MAXGAMEMOVES];
-    StateInfo *st;
 
 #if defined(EVAL_NNUE) || defined(EVAL_LEARN)
     // �]���֐��ŗp�����̃��X�g

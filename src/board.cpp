@@ -176,10 +176,8 @@ void ParseFen(const char *fen, Position *pos) {
 
     ClearPosition(pos);
 
-    pos->st = &pos->gameHistory[0];
-    for (int i = 1; i < MAXGAMEMOVES; ++i) {
+    for (int i = 1; i < MAXGAMEMOVES; ++i)
         pos->gameHistory[i].previous = &pos->gameHistory[i-1];
-    }
 
 #if defined(EVAL_NNUE)
     // evalList��clear�B���memset�Ń[���N���A�����Ƃ��ɃN���A����Ă��邪�c�B

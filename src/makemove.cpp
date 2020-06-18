@@ -146,12 +146,11 @@ void TakeMove(Position *pos) {
 #ifdef EVAL_NNUE
     const Piece pc = pieceOn(to);
 
-    pos->st++;
 #endif
 
     if (promotion(move)) {
 #if defined(EVAL_NNUE)
-        PieceNumber piece_no0 = pos->st->dirtyPiece.pieceNo[0];
+        PieceNumber piece_no0 = pos->state()->dirtyPiece.pieceNo[0];
         pos->evalList.put_piece(piece_no0, to, pc);
 #endif  // defined(EVAL_NNUE)
     }
@@ -177,7 +176,7 @@ void TakeMove(Position *pos) {
             case G1: rto = F1; rfrom = H1; MovePiece(pos, F1, H1, false); break;
             default: rto = F8; rfrom = H8; MovePiece(pos, F8, H8, false); break;
         }
-        auto& dp = pos->st->dirtyPiece;
+        auto& dp = pos->state()->dirtyPiece;
         dp.dirty_num = 2;
 
         PieceNumber piece_no1 = pos->piece_no_of(rto);
@@ -191,7 +190,7 @@ void TakeMove(Position *pos) {
     MovePiece(pos, to, from, false);
 
 #if defined(EVAL_NNUE)
-    PieceNumber piece_no0 = pos->st->dirtyPiece.pieceNo[0];
+    PieceNumber piece_no0 = pos->state()->dirtyPiece.pieceNo[0];
     pos->evalList.put_piece(piece_no0, from, pc);
     pos->evalList.piece_no_list_board[to] = PIECE_NUMBER_NB;
 #endif  // defined(EVAL_NNUE)
@@ -203,7 +202,7 @@ void TakeMove(Position *pos) {
         AddPiece(pos, to, capt, false);
 
 #if defined(EVAL_NNUE)
-        PieceNumber piece_no1 = pos->st->dirtyPiece.pieceNo[1];
+        PieceNumber piece_no1 = pos->state()->dirtyPiece.pieceNo[1];
         assert(pos->evalList.bona_piece(piece_no1).fw == Eval::BONA_PIECE_ZERO);
         assert(pos->evalList.bona_piece(piece_no1).fb == Eval::BONA_PIECE_ZERO);
         pos->evalList.put_piece(piece_no1, !moveIsEnPas(move) ? to : to ^ 8, capt);
@@ -235,15 +234,13 @@ bool MakeMove(Position *pos, const Move move) {
 
 #if defined(EVAL_NNUE)
 
-    pos->st++;
-
-    pos->st->accumulator.computed_accumulation = false;
-    pos->st->accumulator.computed_score = false;
+    pos->state()->accumulator.computed_accumulation = false;
+    pos->state()->accumulator.computed_score = false;
 
     PieceNumber piece_no0 = PIECE_NUMBER_NB;
     PieceNumber piece_no1 = PIECE_NUMBER_NB;
 
-    auto& dp = pos->st->dirtyPiece;
+    auto& dp = pos->state()->dirtyPiece;
     dp.dirty_num = 1;
 
     Square capsq = SQUARE_NB;
@@ -406,8 +403,6 @@ bool MakeMove(Position *pos, const Move move) {
 // Pass the turn without moving
 void MakeNullMove(Position *pos) {
 
-    pos->st++;
-
     // Save misc info for takeback
     history(0).posKey         = pos->key;
     history(0).move           = NOMOVE;
@@ -434,8 +429,6 @@ void MakeNullMove(Position *pos) {
 
 // Take back a null move
 void TakeNullMove(Position *pos) {
-
-    pos->st--;
 
     // Decrease ply
     pos->histPly--;
