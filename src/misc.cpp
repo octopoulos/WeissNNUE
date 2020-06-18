@@ -15,6 +15,22 @@
 using namespace std;
 
 
+void prefetch(void* addr) {
+
+#  if defined(__INTEL_COMPILER)
+   // This hack prevents prefetches from being optimized away by
+   // Intel compiler. Both MSVC and gcc seem not be affected by this.
+   __asm__ ("");
+#  endif
+
+#  if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+  _mm_prefetch((char*)addr, _MM_HINT_T0);
+#  else
+  __builtin_prefetch(addr);
+#  endif
+}
+
+
 void* aligned_malloc(size_t size, size_t align)
 {
 	void* p = _mm_malloc(size, align);

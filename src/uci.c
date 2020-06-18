@@ -35,7 +35,8 @@
 
 
 bool SkipLoadingEval;
-char EvalDir[INPUT_SIZE];
+bool evalLoaded;
+char EvalDir[INPUT_SIZE] = "eval";
 
 
 // Parses the time controls
@@ -148,6 +149,7 @@ static void UCISetOption(Engine *engine, char *str) {
     } else if (OptionName(str, "EvalDir")) {
 
         strncpy(EvalDir, OptionValue(str), INPUT_SIZE);
+        evalLoaded = false;
 
     // Sets evaluation parameters (dev mode)
     } else
@@ -163,6 +165,7 @@ static void UCIInfo() {
     printf("option name Threads type spin default %d min %d max %d\n", 1, 1, 2048);
     printf("option name SyzygyPath type string default <empty>\n");
     printf("option name NoobBook type check default false\n");
+    printf("option name EvalDir type string default <eval>\n");
     printf("option name Ponder type check default false\n"); // Turn on ponder stats in cutechess gui
     TuneDeclareAll(); // Declares all evaluation parameters as options (dev mode)
     printf("uciok\n"); fflush(stdout);
@@ -179,6 +182,12 @@ static void UCIStop(Engine *engine) {
 // Signals the engine is ready
 static void UCIIsReady(Engine *engine) {
     InitTT(engine->threads);
+
+#ifdef EVAL_NNUE
+    if (!evalLoaded)
+        Eval::load_eval(), evalLoaded = true;
+#endif
+
     printf("readyok\n");
     fflush(stdout);
 }

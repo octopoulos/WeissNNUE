@@ -38,7 +38,7 @@ POPCNT = -msse3 -mpopcnt
 PEXT   = $(POPCNT) -DUSE_PEXT -mbmi2
 
 # Flags
-STD    = -std=c++14 -DEVAL_NNUE
+STD    = -std=c++14 -DEVAL_NNUE -DUSE_EVAL_HASH -DUSE_AVX2 -DUSE_SSE2 -fopenmp
 LIBS   = -pthread -lm
 WARN   = -Wall -Wextra -Wshadow -Wno-format
 

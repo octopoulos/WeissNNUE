@@ -59,6 +59,7 @@ typedef struct Position {
     PieceNumber piece_no_of(Square sq) const;
 
     Color side_to_move() const { return stm; };
+    Key get_key() const { return key; };
 
     Piece piece_on(Square sq) const { return board[sq]; };
 #endif  // defined(EVAL_NNUE)

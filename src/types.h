@@ -27,6 +27,9 @@
 #define NDEBUG
 #include <assert.h>
 
+#ifdef EVAL_NNUE
+#include <immintrin.h>
+#endif
 
 // Macro for printing size_t
 #ifdef _WIN32

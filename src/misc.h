@@ -8,6 +8,8 @@
 #include <vector>
 
 
+void prefetch(void* addr);
+
 // --------------------
 //       Math
 // --------------------

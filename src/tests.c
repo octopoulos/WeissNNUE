@@ -62,6 +62,10 @@ void Benchmark(int argc, char **argv) {
     Thread *threads = InitThreads(threadCount);
     InitTT(threads);
 
+#ifdef EVAL_NNUE
+    Eval::load_eval();
+#endif
+
     int FENCount = sizeof(BenchmarkFENs) / sizeof(char *);
     BenchResult results[FENCount];
     TimePoint totalElapsed = 1; // Avoid possible div/0

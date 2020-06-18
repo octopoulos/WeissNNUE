@@ -235,22 +235,20 @@ void prefetch_evalhash(const Key key) {
 void load_eval() {
   NNUE::Initialize();
 
-  if (SkipLoadingEval)
+  if (!SkipLoadingEval)
   {
     const std::string dir_name = EvalDir;
     const std::string file_name = Path::Combine(dir_name, NNUE::kFileName);
-    //{
-    //  std::ofstream stream(file_name, std::ios::binary);
-    //  NNUE::WriteParameters(stream);
-    //}
+
+    std::cout << "info string loading " << file_name << std::endl;
+
     std::ifstream stream(file_name, std::ios::binary);
     const bool result = NNUE::ReadParameters(stream);
 
-//    ASSERT(result);
 	if (!result)
 	{
 		// 読み込みエラーのとき終了してくれないと困る。
-		std::cout << "Error! : failed to read " << NNUE::kFileName << std::endl;
+		std::cout << "info string failed to load " << file_name << std::endl;
 		my_exit();
 	}
   }
@@ -287,7 +285,7 @@ Value evaluate(const Position *pos) {
 
 #if defined(USE_EVAL_HASH)
   // evaluate hash tableにはあるかも。
-  const Key key = pos.key();
+  const Key key = pos->get_key();
   ScoreKeyValue entry = *g_evalTable[key];
   entry.decode();
   if (entry.key == key) {
