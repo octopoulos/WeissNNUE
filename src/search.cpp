@@ -255,11 +255,14 @@ static int AlphaBeta(Thread *thread, int alpha, int beta, Depth depth, PV *pv) {
     }
 
     // Do a static evaluation for pruning considerations
+#ifdef EVAL_NNUE
+    int eval = history(0).eval = Eval::evaluate(pos);
+    eval = history(0).eval = inCheck ? NOSCORE : eval;
+#else
     int eval = history(0).eval = inCheck          ? NOSCORE
-#ifndef EVAL_NNUE
                                : lastMoveNullMove ? -history(-1).eval + 2 * Tempo
-#endif
                                                   : (Score)Eval::evaluate(pos);
+#endif
 
     // Improving if not in check, and current eval is higher than 2 plies ago
     bool improving = !inCheck && pos->ply >= 2 && eval > history(-2).eval;

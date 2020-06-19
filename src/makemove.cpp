@@ -139,18 +139,20 @@ void TakeMove(Position *pos) {
     // Change side to play
     sideToMove ^= 1;
 
+    StateInfo *st = pos->state();
+
     // Get the move from history
     const Move move = history(0).move;
     const Square from = fromSq(move);
     const Square to = toSq(move);
 #ifdef EVAL_NNUE
-    const Piece pc = pieceOn(to);
-
+    Piece pc = pieceOn(to);
 #endif
 
     if (promotion(move)) {
 #if defined(EVAL_NNUE)
-        PieceNumber piece_no0 = pos->state()->dirtyPiece.pieceNo[0];
+        pc = MakePiece(sideToMove, PAWN);
+        PieceNumber piece_no0 = st->dirtyPiece.pieceNo[0];
         pos->evalList.put_piece(piece_no0, to, pc);
 #endif  // defined(EVAL_NNUE)
     }
@@ -170,16 +172,15 @@ void TakeMove(Position *pos) {
         }
 #else
         Square rto, rfrom;
+        PieceNumber piece_no1;
         switch (to) {
-            case C1: rto = D1; rfrom = A1; MovePiece(pos, D1, A1, false); break;
-            case C8: rto = D8; rfrom = A8; MovePiece(pos, D8, A8, false); break;
-            case G1: rto = F1; rfrom = H1; MovePiece(pos, F1, H1, false); break;
-            default: rto = F8; rfrom = H8; MovePiece(pos, F8, H8, false); break;
+            case C1: rto = D1; rfrom = A1; piece_no1 = pos->piece_no_of(rto); MovePiece(pos, D1, A1, false); break;
+            case C8: rto = D8; rfrom = A8; piece_no1 = pos->piece_no_of(rto); MovePiece(pos, D8, A8, false); break;
+            case G1: rto = F1; rfrom = H1; piece_no1 = pos->piece_no_of(rto); MovePiece(pos, F1, H1, false); break;
+            default: rto = F8; rfrom = H8; piece_no1 = pos->piece_no_of(rto); MovePiece(pos, F8, H8, false); break;
         }
-        auto& dp = pos->state()->dirtyPiece;
+        auto& dp = st->dirtyPiece;
         dp.dirty_num = 2;
-
-        PieceNumber piece_no1 = pos->piece_no_of(rto);
 
         pos->evalList.piece_no_list_board[rto] = PIECE_NUMBER_NB;
         pos->evalList.put_piece(piece_no1, rfrom, MakePiece(sideToMove, ROOK));
@@ -190,7 +191,7 @@ void TakeMove(Position *pos) {
     MovePiece(pos, to, from, false);
 
 #if defined(EVAL_NNUE)
-    PieceNumber piece_no0 = pos->state()->dirtyPiece.pieceNo[0];
+    PieceNumber piece_no0 = st->dirtyPiece.pieceNo[0];
     pos->evalList.put_piece(piece_no0, from, pc);
     pos->evalList.piece_no_list_board[to] = PIECE_NUMBER_NB;
 #endif  // defined(EVAL_NNUE)
@@ -202,12 +203,21 @@ void TakeMove(Position *pos) {
         AddPiece(pos, to, capt, false);
 
 #if defined(EVAL_NNUE)
-        PieceNumber piece_no1 = pos->state()->dirtyPiece.pieceNo[1];
+        PieceNumber piece_no1 = st->dirtyPiece.pieceNo[1];
         assert(pos->evalList.bona_piece(piece_no1).fw == Eval::BONA_PIECE_ZERO);
         assert(pos->evalList.bona_piece(piece_no1).fb == Eval::BONA_PIECE_ZERO);
         pos->evalList.put_piece(piece_no1, !moveIsEnPas(move) ? to : to ^ 8, capt);
 #endif  // defined(EVAL_NNUE)
     }
+
+#if defined(EVAL_NNUE)
+    if (moveIsEnPas(move)) {
+          PieceNumber piece_no1 = st->dirtyPiece.pieceNo[1];
+          assert(pos->evalList.bona_piece(piece_no1).fw == Eval::BONA_PIECE_ZERO);
+          assert(pos->evalList.bona_piece(piece_no1).fb == Eval::BONA_PIECE_ZERO);
+          pos->evalList.put_piece(piece_no1, to ^ 8, MakePiece(!sideToMove, PAWN));
+    }
+#endif  // defined(EVAL_NNUE)
 
     // Remove promoted piece and put back the pawn
     Piece promo = promotion(move);
@@ -234,13 +244,15 @@ bool MakeMove(Position *pos, const Move move) {
 
 #if defined(EVAL_NNUE)
 
-    pos->state()->accumulator.computed_accumulation = false;
-    pos->state()->accumulator.computed_score = false;
+    StateInfo *st = pos->state();
+
+    st->accumulator.computed_accumulation = false;
+    st->accumulator.computed_score = false;
 
     PieceNumber piece_no0 = PIECE_NUMBER_NB;
     PieceNumber piece_no1 = PIECE_NUMBER_NB;
 
-    auto& dp = pos->state()->dirtyPiece;
+    auto& dp = st->dirtyPiece;
     dp.dirty_num = 1;
 
     Square capsq = SQUARE_NB;
@@ -280,9 +292,42 @@ bool MakeMove(Position *pos, const Move move) {
 #if defined(EVAL_NNUE)
         capsq = to;
         piece_no1 = pos->piece_no_of(to);
+
+        dp.dirty_num = 2; // ���������2��
+
+        dp.pieceNo[1] = piece_no1;
+        dp.changed_piece[1].old_piece = pos->evalList.bona_piece(piece_no1);
+        // Do not use Eval::EvalList::put_piece() because the piece is removed
+        // from the game, and the corresponding elements of the piece lists
+        // needs to be Eval::BONA_PIECE_ZERO.
+        pos->evalList.set_piece_on_board(piece_no1, Eval::BONA_PIECE_ZERO, Eval::BONA_PIECE_ZERO, capsq);
+        // Set PIECE_NUMBER_NB to pos->piece_no_of_board[capsq] directly because it
+        // will not be overritten to pc if the move type is enpassant.
+        pos->evalList.piece_no_list_board[capsq] = PIECE_NUMBER_NB;
+        dp.changed_piece[1].new_piece = pos->evalList.bona_piece(piece_no1);
 #endif  // defined(EVAL_NNUE)
         ClearPiece(pos, to, true);
         pos->rule50 = 0;
+    }
+
+    if (moveIsEnPas(move)) {
+#if defined(EVAL_NNUE)
+        capsq = to ^ 8;
+        piece_no1 = pos->piece_no_of(capsq);
+
+        dp.dirty_num = 2; // ���������2��
+
+        dp.pieceNo[1] = piece_no1;
+        dp.changed_piece[1].old_piece = pos->evalList.bona_piece(piece_no1);
+        // Do not use Eval::EvalList::put_piece() because the piece is removed
+        // from the game, and the corresponding elements of the piece lists
+        // needs to be Eval::BONA_PIECE_ZERO.
+        pos->evalList.set_piece_on_board(piece_no1, Eval::BONA_PIECE_ZERO, Eval::BONA_PIECE_ZERO, capsq);
+        // Set PIECE_NUMBER_NB to pos->piece_no_of_board[capsq] directly because it
+        // will not be overritten to pc if the move type is enpassant.
+        pos->evalList.piece_no_list_board[capsq] = PIECE_NUMBER_NB;
+        dp.changed_piece[1].new_piece = pos->evalList.bona_piece(piece_no1);
+#endif  // defined(EVAL_NNUE)
     }
 
 #if defined(EVAL_NNUE)
@@ -317,11 +362,6 @@ bool MakeMove(Position *pos, const Move move) {
 
         // Remove pawn captured by en passant
         } else if (moveIsEnPas(move)) {
-#if defined(EVAL_NNUE)
-            capsq = to ^ 8;
-            piece_no1 = pos->piece_no_of(capsq);
-            pos->evalList.piece_no_list_board[capsq] = PIECE_NUMBER_NB;
-#endif  // defined(EVAL_NNUE)
             ClearPiece(pos, to ^ 8, true);
 
         // Replace promoting pawn with new piece
@@ -369,24 +409,6 @@ bool MakeMove(Position *pos, const Move move) {
     // Change turn to play
     sideToMove ^= 1;
     HASH_SIDE;
-
-#if defined(EVAL_NNUE)
-    if (capt || moveIsEnPas(move)) {
-        assert(capsq != SQUARE_NB);
-        dp.dirty_num = 2; // ���������2��
-
-        dp.pieceNo[1] = piece_no1;
-        dp.changed_piece[1].old_piece = pos->evalList.bona_piece(piece_no1);
-        // Do not use Eval::EvalList::put_piece() because the piece is removed
-        // from the game, and the corresponding elements of the piece lists
-        // needs to be Eval::BONA_PIECE_ZERO.
-        pos->evalList.set_piece_on_board(piece_no1, Eval::BONA_PIECE_ZERO, Eval::BONA_PIECE_ZERO, capsq);
-        // Set PIECE_NUMBER_NB to pos->piece_no_of_board[capsq] directly because it
-        // will not be overritten to pc if the move type is enpassant.
-        pos->evalList.piece_no_list_board[capsq] = PIECE_NUMBER_NB;
-        dp.changed_piece[1].new_piece = pos->evalList.bona_piece(piece_no1);
-    }
-#endif  // defined(EVAL_NNUE)
 
     // If own king is attacked after the move, take it back immediately
     if (KingAttacked(pos, sideToMove^1))
