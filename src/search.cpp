@@ -80,7 +80,7 @@ static int QuiescenceDeltaMargin(const Position *pos) {
     const int DeltaBase = PawnOn7th(pos) ? Q_MG : P_MG;
 
     // Look for possible captures on the board
-    const Bitboard enemy = colorBB(!sideToMove);
+    const Bitboard enemy = colorBB(~sideToMove);
 
     // Find the most valuable piece we could take and add to our base
     return DeltaBase + ((enemy & pieceBB(QUEEN )) ? Q_MG
@@ -420,7 +420,7 @@ move_loop:
                 alpha = score;
 
                 // Update search history
-                if (quiet)
+                if (quiet && depth > 1)
                     thread->history[pieceOn(fromSq(bestMove))][toSq(bestMove)] += depth * depth;
 
                 // If score beats beta we have a cutoff

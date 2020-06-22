@@ -58,7 +58,7 @@
 #define colorBB(color) (pos->colorBB[(color)])
 #define colorPieceBB(color, type) (colorBB(color) & pieceBB(type))
 #define sideToMove (pos->stm)
-#define pieceOn(sq) (pos->board[sq])
+#define pieceOn(sq) (Piece(pos->board[sq]))
 
 
 typedef uint64_t Bitboard;
@@ -70,9 +70,6 @@ typedef uint32_t Square;
 typedef int64_t TimePoint;
 
 typedef int32_t Depth;
-typedef int32_t Color;
-typedef int32_t Piece;
-typedef int32_t PieceType;
 
 enum Limit {
     MAXGAMEMOVES     = 512,
@@ -91,20 +88,20 @@ enum Score {
     NOSCORE  = MATE + 2,
 };
 
-enum {
-    BLACK, WHITE
+enum Color {
+    WHITE, BLACK
 };
 
 constexpr Color Colors[2] = { WHITE, BLACK };
 
-enum {
+enum PieceType {
     ALL, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, TYPE_NB = 8
 };
 
-enum {
+enum Piece {
     EMPTY, NO_PIECE = 0,
-    bP = 1, bN, bB, bR, bQ, bK,
-    wP = 9, wN, wB, wR, wQ, wK,
+    wP = 1, wN, wB, wR, wQ, wK,
+    bP = 9, bN, bB, bR, bQ, bK,
     PIECE_NB = 16
 };
 
@@ -139,12 +136,12 @@ enum {
     A8, B8, C8, D8, E8, F8, G8, H8, SQUARE_NB, SQUARE_NB_PLUS1, SQUARE_ZERO = 0
 };
 
-typedef enum Direction {
+enum Direction {
     NORTH = 8,
     EAST  = 1,
     SOUTH = -NORTH,
     WEST  = -EAST
-} Direction;
+};
 
 enum CastlingRights {
     WHITE_OO  = 1,
@@ -207,9 +204,16 @@ inline T& operator/=(T& d, int i) { return d = T(int(d) / i); }
 
 ENABLE_FULL_OPERATORS_ON(Value)
 
+ENABLE_INCR_OPERATORS_ON(Piece)
+ENABLE_INCR_OPERATORS_ON(PieceType)
+
 #undef ENABLE_FULL_OPERATORS_ON
 #undef ENABLE_INCR_OPERATORS_ON
 #undef ENABLE_BASE_OPERATORS_ON
+
+constexpr Color operator~(Color c) {
+    return Color(c ^ 1);
+}
 
 /* Structs */
 

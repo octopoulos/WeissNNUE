@@ -54,7 +54,7 @@ static void ClearPiece(Position *pos, const Square sq, const bool hash) {
         HASH_PCE(piece, sq);
 
     // Set square to empty
-    pieceOn(sq) = EMPTY;
+    pos->board[sq] = EMPTY;
 
     // Update material
     pos->material -= PSQT[piece][sq];
@@ -83,7 +83,7 @@ static void AddPiece(Position *pos, const Square sq, const Piece piece, const bo
         HASH_PCE(piece, sq);
 
     // Update square
-    pieceOn(sq) = piece;
+    pos->board[sq] = piece;
 
     // Update material
     pos->material += PSQT[piece][sq];
@@ -117,8 +117,8 @@ static void MovePiece(Position *pos, const Square from, const Square to, const b
         HASH_PCE(piece, to);
 
     // Set old square to empty, new to piece
-    pieceOn(from) = EMPTY;
-    pieceOn(to)   = piece;
+    pos->board[from] = EMPTY;
+    pos->board[to]   = piece;
 
     // Update material
     pos->material += PSQT[piece][to] - PSQT[piece][from];
@@ -137,9 +137,8 @@ void TakeMove(Position *pos) {
     pos->ply--;
 
     // Change side to play
-    sideToMove ^= 1;
+    sideToMove = ~sideToMove;
 
-    StateInfo *st = pos->state();
 
     // Get the move from history
     const Move move = history(0).move;
@@ -147,6 +146,8 @@ void TakeMove(Position *pos) {
     const Square to = toSq(move);
 #ifdef EVAL_NNUE
     Piece pc = pieceOn(to);
+
+    StateInfo *st = pos->state();
 #endif
 
     if (promotion(move)) {
@@ -159,7 +160,7 @@ void TakeMove(Position *pos) {
 
     // Add in pawn captured by en passant
     if (moveIsEnPas(move))
-        AddPiece(pos, to ^ 8, MakePiece(!sideToMove, PAWN), false);
+        AddPiece(pos, to ^ 8, MakePiece(~sideToMove, PAWN), false);
 
     // Move rook back if castling
     else if (moveIsCastle(move)) {
@@ -215,7 +216,7 @@ void TakeMove(Position *pos) {
           PieceNumber piece_no1 = st->dirtyPiece.pieceNo[1];
           assert(pos->evalList.bona_piece(piece_no1).fw == Eval::BONA_PIECE_ZERO);
           assert(pos->evalList.bona_piece(piece_no1).fb == Eval::BONA_PIECE_ZERO);
-          pos->evalList.put_piece(piece_no1, to ^ 8, MakePiece(!sideToMove, PAWN));
+          pos->evalList.put_piece(piece_no1, to ^ 8, MakePiece(~sideToMove, PAWN));
     }
 #endif  // defined(EVAL_NNUE)
 
@@ -354,7 +355,7 @@ bool MakeMove(Position *pos, const Move move) {
         // Set en passant square if applicable
         if (moveIsPStart(move)) {
             if ((  PawnAttackBB(sideToMove, to ^ 8)
-                 & colorPieceBB(!sideToMove, PAWN))) {
+                 & colorPieceBB(~sideToMove, PAWN))) {
 
                 pos->epSquare = to ^ 8;
                 HASH_EP;
@@ -407,11 +408,11 @@ bool MakeMove(Position *pos, const Move move) {
     }
 
     // Change turn to play
-    sideToMove ^= 1;
+    sideToMove = ~sideToMove;
     HASH_SIDE;
 
     // If own king is attacked after the move, take it back immediately
-    if (KingAttacked(pos, sideToMove^1))
+    if (KingAttacked(pos, ~sideToMove))
         return TakeMove(pos), false;
 
     assert(PositionOk(pos));
@@ -439,7 +440,7 @@ void MakeNullMove(Position *pos) {
     pos->rule50 = 0;
 
     // Change side to play
-    sideToMove ^= 1;
+    sideToMove = ~sideToMove;
     HASH_SIDE;
 
     // Hash out en passant if there was one, and unset it
@@ -457,7 +458,7 @@ void TakeNullMove(Position *pos) {
     pos->ply--;
 
     // Change side to play
-    sideToMove ^= 1;
+    sideToMove = ~sideToMove;
 
     // Get info from history
     pos->key            = history(0).posKey;

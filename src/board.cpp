@@ -130,12 +130,6 @@ Key KeyAfter(const Position *pos, const Move move) {
     return key ^ PieceKeys[piece][from] ^ PieceKeys[piece][to];
 }
 
-// Clears the board
-static void ClearPosition(Position *pos) {
-
-    memset(pos, 0, sizeof(Position));
-}
-
 // Update the rest of a position to match pos->board
 static void UpdatePosition(Position *pos) {
 
@@ -174,7 +168,7 @@ void ParseFen(const char *fen, Position *pos) {
 
     assert(fen != NULL);
 
-    ClearPosition(pos);
+    *pos = Position();
 
     for (int i = 1; i < MAXGAMEMOVES; ++i)
         pos->gameHistory[i].previous = &pos->gameHistory[i-1];
@@ -221,7 +215,7 @@ void ParseFen(const char *fen, Position *pos) {
                 break;
         }
 
-        pieceOn(sq) = piece;
+        pos->board[sq] = piece;
 
 #if defined(EVAL_NNUE)
         // WHITE/BLACK reversed in SF, must change?
@@ -239,9 +233,6 @@ void ParseFen(const char *fen, Position *pos) {
         fen++;
     }
     fen++;
-
-    // Update the rest of position to match pos->board
-    UpdatePosition(pos);
 
     // Side to move
     sideToMove = (*fen == 'w') ? WHITE : BLACK;
@@ -261,9 +252,12 @@ void ParseFen(const char *fen, Position *pos) {
     }
     fen++;
 
+    // Update the rest of position to match pos->board
+    UpdatePosition(pos);
+
     // En passant square
     Square ep = AlgebraicToSq(fen[0], fen[1]);
-    bool epValid = *fen != '-' && (  PawnAttackBB(!sideToMove, ep)
+    bool epValid = *fen != '-' && (  PawnAttackBB(~sideToMove, ep)
                                    & colorPieceBB(sideToMove, PAWN));
     pos->epSquare = epValid ? ep : 0;
 
@@ -412,7 +406,7 @@ bool PositionOk(const Position *pos) {
 
     assert(GeneratePosKey(pos) == pos->key);
 
-    assert(!KingAttacked(pos, !sideToMove));
+    assert(!KingAttacked(pos, ~sideToMove));
 
     return true;
 }
@@ -427,17 +421,17 @@ void MirrorBoard(Position *pos) {
     for (Square sq = A1; sq <= H8; ++sq)
         board[sq] = MirrorPiece(pieceOn(MirrorSquare(sq)));
 
-    Color stm = !sideToMove;
+    Color stm = ~sideToMove;
     Square ep = pos->epSquare == 0 ? 0 : MirrorSquare(pos->epSquare);
     uint8_t cr = (pos->castlingRights & WHITE_CASTLE) << 2
                | (pos->castlingRights & BLACK_CASTLE) >> 2;
 
     // Clear the position
-    ClearPosition(pos);
+    *pos = Position();
 
     // Fill in the mirrored position info
     for (Square sq = A1; sq <= H8; ++sq)
-        pieceOn(sq) = board[sq];
+        pos->board[sq] = board[sq];
 
     sideToMove = stm;
     pos->epSquare = ep;

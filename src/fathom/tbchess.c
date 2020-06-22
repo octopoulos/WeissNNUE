@@ -296,7 +296,7 @@ static TbMove *gen_captures(const Pos *pos, TbMove *moves)
     for (b = us & pos->pawns; b; b = poplsb(b))
     {
         unsigned from = lsb(b);
-        att = pawn_attacks(from, pos->turn);
+        att = pawn_attacks(from, Color(pos->turn));
         if (pos->ep != 0 && ((att & board(pos->ep)) != 0))
         {
             unsigned to = pos->ep;
@@ -370,7 +370,7 @@ static TbMove *gen_moves(const Pos *pos, TbMove *moves)
     {
         unsigned from = lsb(b);
         unsigned next = from + (pos->turn? 8: -8);
-        att = pawn_attacks(from, pos->turn);
+        att = pawn_attacks(from, Color(pos->turn));
         if (pos->ep != 0 && ((att & board(pos->ep)) != 0))
         {
             unsigned to = pos->ep;
@@ -449,7 +449,7 @@ static bool is_legal(const Pos *pos)
         return false;
     if (knight_attacks(sq) & (pos->knights & them))
         return false;
-    if (pawn_attacks(sq, !pos->turn) & (pos->pawns & them))
+    if (pawn_attacks(sq, Color(!pos->turn)) & (pos->pawns & them))
         return false;
     return true;
 }
@@ -475,7 +475,7 @@ static bool is_check(const Pos *pos)
         return true;
     if (knight_attacks(sq) & (pos->knights & them))
         return true;
-    if (pawn_attacks(sq, pos->turn) & (pos->pawns & them))
+    if (pawn_attacks(sq, Color(pos->turn)) & (pos->pawns & them))
         return true;
     return false;
 }
@@ -571,10 +571,10 @@ static bool do_move(Pos *pos, const Pos *pos0, TbMove move)
     {
         pos->rule50 = 0;                // Pawn move
         if (rank(from) == 1 && rank(to) == 3 &&
-            (pawn_attacks(from+8, true) & pos0->pawns & pos0->black) != 0)
+            (pawn_attacks(from+8, Color(true)) & pos0->pawns & pos0->black) != 0)
             pos->ep = from+8;
         else if (rank(from) == 6 && rank(to) == 4 &&
-            (pawn_attacks(from-8, false) & pos0->pawns & pos0->white) != 0)
+            (pawn_attacks(from-8, Color(false)) & pos0->pawns & pos0->white) != 0)
             pos->ep = from-8;
         else if (to == pos0->ep)
         {

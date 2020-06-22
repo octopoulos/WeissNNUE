@@ -54,7 +54,7 @@ bool ProbeWDL(const Position *pos, int *score, int *bound) {
         pieceBB(KING),   pieceBB(QUEEN),
         pieceBB(ROOK),   pieceBB(BISHOP),
         pieceBB(KNIGHT), pieceBB(PAWN),
-        0, sideToMove);
+        0, ~sideToMove);
 
     // Probe failed
     if (result == TB_RESULT_FAILED)
@@ -84,7 +84,7 @@ bool RootProbe(Position *pos, Thread *thread) {
         pieceBB(KING),   pieceBB(QUEEN),
         pieceBB(ROOK),   pieceBB(BISHOP),
         pieceBB(KNIGHT), pieceBB(PAWN),
-        pos->rule50, pos->epSquare, sideToMove);
+        pos->rule50, pos->epSquare, ~sideToMove);
 
     // Probe failed
     if (   result == TB_RESULT_FAILED

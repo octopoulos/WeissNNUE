@@ -61,7 +61,7 @@ typedef struct Position {
     Color side_to_move() const { return stm; };
     Key get_key() const { return key; };
 
-    Piece piece_on(Square sq) const { return board[sq]; };
+    Piece piece_on(Square sq) const { return Piece(board[sq]); };
 #endif  // defined(EVAL_NNUE)
 
     uint8_t board[64];
@@ -126,7 +126,7 @@ INLINE Square MirrorSquare(const Square sq) {
 
 // Returns the same piece of the opposite color
 INLINE Piece MirrorPiece(Piece piece) {
-    return piece == EMPTY ? EMPTY : piece ^ 8;
+    return piece == EMPTY ? EMPTY : Piece(piece ^ 8);
 }
 
 // Returns the distance between two squares
@@ -163,15 +163,15 @@ INLINE int RelativeRank(const Color color, const int rank) {
 }
 
 INLINE Color ColorOf(const Piece piece) {
-    return piece >> 3;
+    return Color(piece >> 3);
 }
 
 INLINE PieceType PieceTypeOf(const Piece piece) {
-    return (piece & 7);
+    return PieceType(piece & 7);
 }
 
 INLINE Piece MakePiece(const Color color, const PieceType pt) {
-    return (color << 3) + pt;
+    return Piece((color << 3) + pt);
 }
 
 INLINE Square AlgebraicToSq(const char file, const char rank) {

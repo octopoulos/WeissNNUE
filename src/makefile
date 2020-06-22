@@ -18,7 +18,7 @@
 
 # General
 EXE    = weiss
-SRC    = *.cpp *.c fathom/tbprobe.c noobprobe/noobprobe.c \
+SRC    = *.cpp fathom/tbprobe.c noobprobe/noobprobe.c \
 	eval/evaluate_mir_inv_tools.cpp \
 	eval/nnue/evaluate_nnue.cpp \
 	eval/nnue/evaluate_nnue_learner.cpp \

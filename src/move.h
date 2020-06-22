@@ -50,10 +50,10 @@
 #define MOVE(f, t, ca, pro, fl) ((f) | ((t) << 6) | ((ca) << 12) | ((pro) << 16) | (fl))
 
 // Extract info from a move
-#define fromSq(move)     ((move) & MOVE_FROM)
-#define toSq(move)      (((move) & MOVE_TO)    >>  6)
-#define capturing(move) (((move) & MOVE_CAPT)  >> 12)
-#define promotion(move) (((move) & MOVE_PROMO) >> 16)
+#define fromSq(move)           ((move) & MOVE_FROM)
+#define toSq(move)            (((move) & MOVE_TO)    >>  6)
+#define capturing(move) (Piece(((move) & MOVE_CAPT)  >> 12))
+#define promotion(move) (Piece(((move) & MOVE_PROMO) >> 16))
 
 // Move types
 #define moveIsEnPas(move)   (move & FLAG_ENPAS)
@@ -83,8 +83,8 @@ INLINE bool CastlePseudoLegal(const Position *pos, Color color, int side) {
 
     return (pos->castlingRights & castle)
         && !(pieceBB(ALL) & blocking)
-        && !SqAttacked(pos, kingSq, !color)
-        && !SqAttacked(pos, midway, !color);
+        && !SqAttacked(pos, kingSq, ~color)
+        && !SqAttacked(pos, midway, ~color);
 }
 
 bool MoveIsPseudoLegal(const Position *pos, Move move);

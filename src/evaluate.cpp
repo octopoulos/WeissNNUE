@@ -46,6 +46,7 @@ tuneable_const int Tempo = 20;
 // Misc bonuses and maluses
 tuneable_static_const int PawnDoubled    = S( -6,-32);
 tuneable_static_const int PawnIsolated   = S(-28,-16);
+tuneable_static_const int PawnSupport    = S(  5,  5);
 tuneable_static_const int BishopPair     = S( 52, 72);
 tuneable_static_const int KingLineDanger = S(-12,  4);
 
@@ -130,6 +131,8 @@ INLINE int EvalPawns(const Position *pos, const Color color) {
     // Doubled pawns
     eval += PawnDoubled * PopCount(pawns & ShiftBB(NORTH, pawns));
 
+    eval += PawnSupport * PopCount(pawns & PawnBBAttackBB(pawns, color));
+
     while (pawns) {
         Square sq = PopLsb(&pawns);
 
@@ -137,7 +140,7 @@ INLINE int EvalPawns(const Position *pos, const Color color) {
         if (!(IsolatedMask[sq] & colorPieceBB(color, PAWN)))
             eval += PawnIsolated;
         // Passed bonus
-        if (!((PassedMask[color][sq]) & colorPieceBB(!color, PAWN)))
+        if (!((PassedMask[color][sq]) & colorPieceBB(~color, PAWN)))
             eval += PawnPassed[RelativeRank(color, RankOf(sq))];
     }
 
@@ -219,7 +222,7 @@ INLINE void InitEvalInfo(const Position *pos, EvalInfo *ei, const Color color) {
 
     // Mobility area is defined as any square not attacked by an enemy pawn,
     // nor occupied by our own pawn on its starting square or blocked from advancing.
-    ei->mobilityArea[color] = ~(b | PawnBBAttackBB(colorPieceBB(!color, PAWN), !color));
+    ei->mobilityArea[color] = ~(b | PawnBBAttackBB(colorPieceBB(~color, PAWN), ~color));
 }
 
 // Calculate a static evaluation of a position
@@ -312,7 +315,7 @@ bool EvalList::is_valid(const Position& pos)
     for (Piece pc = NO_PIECE; pc < PIECE_NB; ++pc)
     {
       auto pt = type_of(pc);
-      if (pt == NO_PIECE || pt == 7) // ���݂��Ȃ���
+      if (pt == 0 || pt == 7) // ���݂��Ȃ���
         continue;
 
       // ��pc��BonaPiece�̊J�n�ԍ�
