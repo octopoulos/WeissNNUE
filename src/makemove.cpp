@@ -439,6 +439,15 @@ void MakeNullMove(Position *pos) {
 
     pos->rule50 = 0;
 
+#if defined(EVAL_NNUE)
+    StateInfo *st = pos->state();
+
+    st->accumulator = st->previous->accumulator;
+    st->accumulator.computed_score = false;
+
+    st->dirtyPiece = st->previous->dirtyPiece;
+#endif
+
     // Change side to play
     sideToMove = ~sideToMove;
     HASH_SIDE;
