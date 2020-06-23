@@ -32,7 +32,6 @@ OUT    = ../bin/
 COMP   = g++
 
 # Defines
-DEV    = -DDEV
 POPCNT = -msse3 -mpopcnt
 PEXT   = $(POPCNT) -DUSE_PEXT -mbmi2
 
@@ -100,7 +99,7 @@ release:
 	$(RELEASE)-pext.exe     $(PEXT)
 
 dev:
-	$(BENCH)-dev $(PEXT) $(DEV)
+	$(BENCH)-dev $(PEXT) -DDEV
 
 gprof:
 	$(COMP) $(PFLAGS) $(SRC) $(LIBS) $(PEXT) -o $(OUT)$(EXE)-prof
