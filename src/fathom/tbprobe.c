@@ -65,10 +65,6 @@ typedef size_t map_t;
 typedef HANDLE map_t;
 #endif
 
-#ifdef __cplusplus
-using namespace std;
-#endif
-
 
 #define DECOMP64
 
@@ -388,7 +384,7 @@ struct BaseEntry {
   uint8_t *data[3];
   map_t mapping[3];
 #ifdef __cplusplus
-  atomic<bool> ready[3];
+  std::atomic<bool> ready[3];
 #else
   atomic_bool ready[3];
 #endif
@@ -610,7 +606,7 @@ int tb_probe_root_wdl(
 // if flip == true.
 static void prt_str(const Pos *pos, char *str, bool flip)
 {
-  int color = flip ? BLACK : WHITE;
+  int color = flip ? TB_BLACK : TB_WHITE;
 
   for (int pt = TB_KING; pt >= TB_PAWN; pt--)
     for (int i = popcount(pieces_by_type(pos, (Color)color, (PieceType)pt)); i > 0; i--)
@@ -754,7 +750,7 @@ struct EncInfo *first_ei(struct BaseEntry *be, const int type)
 static void free_tb_entry(struct BaseEntry *be)
 {
   for (int type = 0; type < 3; type++) {
-    if (atomic_load_explicit(&be->ready[type], memory_order_relaxed)) {
+    if (atomic_load_explicit(&be->ready[type], std::memory_order_relaxed)) {
       unmap_file((void*)(be->data[type]), be->mapping[type]);
       int num = num_tables(be, type);
       struct EncInfo *ei = first_ei(be, type);
@@ -763,7 +759,7 @@ static void free_tb_entry(struct BaseEntry *be)
         if (type != DTZ)
           free(ei[num + t].precomp);
       }
-      atomic_store_explicit(&be->ready[type], false, memory_order_relaxed);
+      atomic_store_explicit(&be->ready[type], false, std::memory_order_relaxed);
     }
   }
 }
@@ -1690,9 +1686,9 @@ int probe_table(const Pos *pos, int s, int *success, const int type) {
   }
 
   // Use double-checked locking to reduce locking overhead
-  if (!atomic_load_explicit(&be->ready[type], memory_order_acquire)) {
+  if (!atomic_load_explicit(&be->ready[type], std::memory_order_acquire)) {
     LOCK(tbMutex);
-    if (!atomic_load_explicit(&be->ready[type], memory_order_relaxed)) {
+    if (!atomic_load_explicit(&be->ready[type], std::memory_order_relaxed)) {
       char str[16];
       prt_str(pos, str, be->key != key);
       if (!init_table(be, str, type)) {
@@ -1701,7 +1697,7 @@ int probe_table(const Pos *pos, int s, int *success, const int type) {
         UNLOCK(tbMutex);
         return 0;
       }
-      atomic_store_explicit(&be->ready[type], true, memory_order_release);
+      atomic_store_explicit(&be->ready[type], true, std::memory_order_release);
     }
     UNLOCK(tbMutex);
   }
@@ -1709,13 +1705,13 @@ int probe_table(const Pos *pos, int s, int *success, const int type) {
   bool bside, flip;
   if (!be->symmetric) {
     flip = key != be->key;
-    bside = (pos->turn == WHITE) == flip;
+    bside = (pos->turn == TB_WHITE) == flip;
     if (type == DTM && be->hasPawns && PAWN(be)->dtmSwitched) {
       flip = !flip;
       bside = !bside;
     }
   } else {
-    flip = pos->turn != WHITE;
+    flip = pos->turn != TB_WHITE;
     bside = false;
   }
 

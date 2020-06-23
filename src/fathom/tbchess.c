@@ -95,7 +95,7 @@ typedef struct Pos
 } Pos;
 
 static inline uint64_t pieces_by_type(const Pos *pos, Color c, PieceType p) {
-  uint64_t mask = (c == WHITE) ? pos->white : pos->black;
+  uint64_t mask = (c == TB_WHITE) ? pos->white : pos->black;
   switch(p) {
   case TB_PAWN:
     return pos->pawns & mask;
@@ -212,7 +212,7 @@ static uint64_t calc_key_from_pieces(uint8_t *piece, int num)
 
 static inline int type_of_piece_moved(Pos *pos, TbMove move) {
   for (int i = TB_PAWN; i <= TB_KING; i++) {
-    if ((pieces_by_type(pos,(Color)(pos->turn == WHITE),(PieceType)i) & board(move_from(move))) != 0) {
+    if ((pieces_by_type(pos,(Color)(pos->turn == TB_WHITE),(PieceType)i) & board(move_from(move))) != 0) {
       return i;
     }
   }

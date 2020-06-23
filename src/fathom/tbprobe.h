@@ -75,6 +75,9 @@ extern unsigned tb_probe_root_impl(
 #define TB_CASTLING_k               0x4     /* Black king-side. */
 #define TB_CASTLING_q               0x8     /* Black queen-side. */
 
+#define TB_BLACK                    0
+#define TB_WHITE                    1
+
 #define TB_LOSS                     0       /* LOSS */
 #define TB_BLESSED_LOSS             1       /* LOSS but 50-move draw */
 #define TB_DRAW                     2       /* DRAW */
