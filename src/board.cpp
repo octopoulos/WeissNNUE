@@ -277,7 +277,7 @@ void ParseFen(const char *fen, Position *pos) {
 // Translates a move to a string
 char *BoardToFen(const Position *pos) {
 
-    const char PceChar[]  = ".pnbrqk..PNBRQK";
+    const char PceChar[]  = ".PNBRQK..pnbrqk";
     static char fen[100];
     char *ptr = fen;
 
