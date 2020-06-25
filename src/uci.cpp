@@ -119,7 +119,7 @@ static void UCISetOption(Engine *engine, char *str) {
 
         TT.requestedMB = atoi(OptionValue(str));
 
-        printf("Hash will use %" PRI_SIZET "MB after next 'isready'.\n", TT.requestedMB);
+        std::cout << "Hash will use " << TT.requestedMB << "MB after next 'isready'.\n";
 
     // Sets number of threads to use for searching
     } else if (OptionName(str, "Threads")) {
