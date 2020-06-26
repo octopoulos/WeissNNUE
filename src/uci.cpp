@@ -29,7 +29,6 @@
 #include "threads.h"
 #include "time.h"
 #include "transposition.h"
-#include "tune.h"
 #include "uci.h"
 
 
