@@ -17,7 +17,6 @@
 */
 
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "fathom/tbprobe.h"
@@ -119,7 +118,8 @@ static void UCISetOption(Engine *engine, char *str) {
 
         TT.requestedMB = atoi(OptionValue(str));
 
-        std::cout << "Hash will use " << TT.requestedMB << "MB after next 'isready'.\n";
+        std::cout << "info string Hash will use " << TT.requestedMB
+                  << "MB after next 'isready'." << std::endl;
 
     // Sets number of threads to use for searching
     } else if (OptionName(str, "Threads")) {
@@ -128,7 +128,8 @@ static void UCISetOption(Engine *engine, char *str) {
         free(engine->threads);
         engine->threads = InitThreads(atoi(OptionValue(str)));
 
-        printf("Search will use %d threads.\n", engine->threads->count);
+        std::cout << "info string Search will use " << engine->threads->count
+                  << (engine->threads->count > 1 ? " threads." : " thread.") << std::endl;
 
     // Sets the syzygy tablebase path
     } else if (OptionName(str, "SyzygyPath")) {
@@ -140,35 +141,24 @@ static void UCISetOption(Engine *engine, char *str) {
 
         noobbook = !strncmp(OptionValue(str), "true", 4);
 
-    // Toggles probing of Chess Cloud Database
-    } else if (OptionName(str, "SkipLoadingEval")) {
-
-        SkipLoadingEval = !strncmp(OptionValue(str), "true", 4);
-
-    // Toggles probing of Chess Cloud Database
+    // Sets the directory of the neural net
     } else if (OptionName(str, "EvalDir")) {
 
         strncpy(EvalDir, OptionValue(str), INPUT_SIZE);
         evalLoaded = false;
-
-    // Sets evaluation parameters (dev mode)
-    } else
-        TuneParseAll(strstr(str, "name") + 5, atoi(OptionValue(str)));
-    fflush(stdout);
+    }
 }
 
 // Prints UCI info
 static void UCIInfo() {
-    printf("id name %s\n", NAME);
-    printf("id author Terje Kirstihagen\n");
-    printf("option name Hash type spin default %d min %d max %d\n", DEFAULTHASH, MINHASH, MAXHASH);
-    printf("option name Threads type spin default %d min %d max %d\n", 1, 1, 2048);
-    printf("option name SyzygyPath type string default <empty>\n");
-    printf("option name NoobBook type check default false\n");
-    printf("option name EvalDir type string default eval\n");
-    printf("option name Ponder type check default false\n"); // Turn on ponder stats in cutechess gui
-    TuneDeclareAll(); // Declares all evaluation parameters as options (dev mode)
-    printf("uciok\n"); fflush(stdout);
+    std::cout <<   "id name " << NAME
+              << "\nid author Terje Kirstihagen"
+              << "\noption name EvalDir type string default eval"
+              << "\noption name Hash type spin default " << DEFAULTHASH << " min " << MINHASH << " max " << MAXHASH
+              << "\noption name Threads type spin default 1 min 1 max 2048"
+              << "\noption name SyzygyPath type string default <empty>"
+              << "\noption name NoobBook type check default false"
+              << "\nuciok" << std::endl;
 }
 
 // Stops searching
@@ -188,8 +178,7 @@ static void UCIIsReady(Engine *engine) {
         Eval::load_eval(), evalLoaded = true;
 #endif
 
-    printf("readyok\n");
-    fflush(stdout);
+    std::cout << "readyok" << std::endl;
 }
 
 // Reset for a new game
@@ -292,9 +281,8 @@ void PrintThinking(const Thread *thread, int score, int alpha, int beta) {
 // Print conclusion of search - best move and ponder move
 void PrintConclusion(const Thread *thread) {
 
-    printf("bestmove %s", MoveToStr(thread->bestMove));
+    std::cout << "bestmove " << MoveToStr(thread->bestMove);
     if (thread->ponderMove)
-        printf(" ponder %s", MoveToStr(thread->ponderMove));
-    printf("\n\n");
-    fflush(stdout);
+        std::cout << " ponder " << MoveToStr(thread->ponderMove);
+    std::cout << "\n" << std::endl;
 }
