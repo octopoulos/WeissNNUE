@@ -109,10 +109,9 @@ bool RootProbe(Position *pos, Thread *thread) {
     Move move = MOVE(from, to, 0, promo ? 6 - promo : 0, 0);
 
     // Print thinking info
-    printf("info depth %d seldepth %d score cp %d "
-           "time 0 nodes 0 nps 0 tbhits 1 pv %s\n",
-           MAXDEPTH-1, MAXDEPTH-1, score, MoveToStr(move));
-    fflush(stdout);
+    std::cout << "info depth " << MAXDEPTH-1 << " seldepth " << MAXDEPTH-1
+              << " score cp " << score << " time 0 nodes 0 nps 0 tbhits 1"
+              << " pv " << MoveToStr(move) << std::endl;
 
     // Set move to be printed as conclusion
     thread->bestMove = move;
