@@ -267,24 +267,26 @@ void PrintThinking(const Thread *thread, int score, int alpha, int beta) {
                                        : score * 100 / P_MG;
 
     TimePoint elapsed = TimeSince(Limits.start);
-    Depth seldepth    = thread->seldepth;
     uint64_t nodes    = TotalNodes(thread);
     uint64_t tbhits   = TotalTBHits(thread);
     int hashFull      = HashFull();
     int nps           = (int)(1000 * nodes / (elapsed + 1));
 
     // Basic info
-    printf("info depth %d seldepth %d score %s %d%s time %" PRId64
-           " nodes %" PRIu64 " nps %d tbhits %" PRIu64 " hashfull %d pv",
-            thread->depth, seldepth, type, score, bound, elapsed,
-            nodes, nps, tbhits, hashFull);
+    std::cout << "info depth " << thread->depth
+              << " seldepth "  << thread->seldepth
+              << " score "     << type << " " << score << bound
+              << " time "      << elapsed
+              << " nodes "     << nodes
+              << " nps "       << nps
+              << " tbhits "    << tbhits
+              << " hashfull "  << hashFull
+              << " pv";
 
     // Principal variation
     for (int i = 0; i < thread->pv.length; i++)
-        printf(" %s", MoveToStr(thread->pv.line[i]));
-
-    printf("\n");
-    fflush(stdout);
+        std::cout << " " << MoveToStr(thread->pv.line[i]);
+    std::cout << std::endl;
 }
 
 // Print conclusion of search - best move and ponder move

@@ -16,7 +16,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+#include <iomanip>
 #include <stdlib.h>
 #include <string.h>
 
@@ -73,7 +73,8 @@ void Benchmark(int argc, char **argv) {
 
     for (int i = 0; i < FENCount; ++i) {
 
-        printf("[# %2d] %s\n", i + 1, BenchmarkFENs[i]);
+        std::cout << "[# " << std::setw(2) << i+1 << "] "
+                  << BenchmarkFENs[i] << std::endl;
 
         // Search
         ParseFen(BenchmarkFENs[i], &pos);
@@ -98,15 +99,20 @@ void Benchmark(int argc, char **argv) {
 
     for (int i = 0; i < FENCount; ++i) {
         BenchResult *r = &results[i];
-        printf("[# %2d] %5d cp  %5s %10" PRIu64 " nodes %10d nps\n",
-               i+1, r->score, MoveToStr(r->best), r->nodes,
-               (int)(1000.0 * r->nodes / (r->elapsed + 1)));
+        std::cout << "[# " << std::setw(2) << i+1 << "] "
+                  << std::setw(5)  << r->score << " cp  "
+                  << std::setw(5)  << MoveToStr(r->best)
+                  << std::setw(10) << r->nodes << " nodes "
+                  << std::setw(10) << int(1000.0 * r->nodes / (r->elapsed + 1)) << " nps\n";
     }
 
     puts("======================================================");
 
-    printf("OVERALL: %7" PRIi64 " ms %13" PRIu64 " nodes %10d nps\n",
-           totalElapsed, totalNodes, (int)(1000.0 * totalNodes / totalElapsed));
+    std::cout << "OVERALL: "
+              << std::setw(7)  << totalElapsed << " ms "
+              << std::setw(13) << totalNodes << " nodes "
+              << std::setw(10) << int(1000.0 * totalNodes / totalElapsed) << " nps"
+              << std::endl;
 }
 
 #ifdef DEV
@@ -153,8 +159,7 @@ void Perft(char *line) {
     !*perftFen ? ParseFen(PERFT_FEN, pos)
                : ParseFen(perftFen,  pos);
 
-    printf("\nStarting perft to depth %d\n\n", depth);
-    fflush(stdout);
+    std::cout << "\nStarting perft to depth " << depth << std::endl;
 
     const TimePoint start = Now();
     leafNodes = 0;
@@ -167,8 +172,7 @@ void Perft(char *line) {
         Move move = list->moves[i].move;
 
         if (!MakeMove(pos, move)){
-            printf("move %d : %s : Illegal\n", i + 1, MoveToStr(move));
-            fflush(stdout);
+            std::cout << "Illegal move : " << MoveToStr(move) << std::endl;
             continue;
         }
 
@@ -177,18 +181,15 @@ void Perft(char *line) {
         TakeMove(pos);
         uint64_t newCount = leafNodes - oldCount;
 
-        printf("move %d : %s : %" PRId64 "\n", i + 1, MoveToStr(move), newCount);
-        fflush(stdout);
+        std::cout << "move " << i+1 << " : " << MoveToStr(move) << " : " << newCount << std::endl;
     }
 
     const TimePoint elapsed = TimeSince(start) + 1;
 
-    printf("\nPerft complete:"
-           "\nTime  : %" PRId64 "ms"
-           "\nLeaves: %" PRIu64
-           "\nLPS   : %" PRId64 "\n",
-           elapsed, leafNodes, leafNodes * 1000 / elapsed);
-    fflush(stdout);
+    std::cout << "\nPerft complete:"
+                 "\nTime   : " << elapsed << "ms"
+                 "\nLeaves : " << leafNodes
+              << "\nLPS    : " << leafNodes * 1000 / elapsed << std::endl;
 }
 
 extern int PieceSqValue[7][64];
@@ -204,8 +205,8 @@ void PrintEval(Position *pos) {
         }
 #endif
 
-    printf("%d\n", sideToMove == WHITE ? Eval::evaluate(pos) : -Eval::evaluate(pos));
-    fflush(stdout);
+    std::cout << (sideToMove == WHITE ?  Eval::evaluate(pos)
+                                      : -Eval::evaluate(pos)) << std::endl;
 }
 
 // Checks evaluation is symmetric
@@ -215,8 +216,7 @@ void MirrorEvalTest(Position *pos) {
 
     FILE *file;
     if ((file = fopen(filename, "r")) == NULL) {
-        printf("MirrorEvalTest: %s not found.\n", filename);
-        fflush(stdout);
+        std::cout << filename << " not found." << std::endl;
         return;
     }
 
@@ -233,25 +233,22 @@ void MirrorEvalTest(Position *pos) {
         ev2 = Eval::evaluate(pos);
 
         if (ev1 != ev2) {
-            printf("\n\n\n");
+            std::cout << "\n\n\n";
             ParseFen(lineIn, pos);
             PrintBoard(pos);
             MirrorBoard(pos);
             PrintBoard(pos);
-            printf("\n\nMirrorEvalTest Fail: %d - %d\n%s\n", ev1, ev2, lineIn);
-            fflush(stdout);
+            std::cout << "\n\nFail: " << ev1 << " : " << ev2 << std::endl;
+            std::cout << lineIn << std::endl;
             return;
         }
 
-        if (positions % 100 == 0) {
-            printf("position %d\n", positions);
-            fflush(stdout);
-        }
+        if (positions % 100 == 0)
+            std::cout << "position " << positions << std::endl;
 
         memset(&lineIn[0], 0, sizeof(lineIn));
     }
-    printf("\n\nMirrorEvalTest Successful\n\n");
-    fflush(stdout);
+    std::cout << "\n\nMirrorEvalTest Successful\n" << std::endl;
     fclose(file);
 }
 #endif

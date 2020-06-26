@@ -351,8 +351,7 @@ void PrintBoard(const Position *pos) {
 
     // Print FEN and zobrist key
     puts(BoardToFen(pos));
-    printf("Zobrist Key: %" PRIu64 "\n\n", pos->key);
-    fflush(stdout);
+    std::cout << "Zobrist Key: " << pos->key << "\n" << std::endl;
 }
 #endif
 
