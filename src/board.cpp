@@ -16,6 +16,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -336,18 +337,16 @@ char *BoardToFen(const Position *pos) {
 // Print the board with misc info
 void PrintBoard(const Position *pos) {
 
-    const char PceChar[]  = ".pnbrqk..PNBRQK";
-
     // Print board
-    printf("\n");
+    std::cout << "\n";
     for (int rank = RANK_8; rank >= RANK_1; --rank) {
         for (int file = FILE_A; file <= FILE_H; ++file) {
             Square sq = (rank * 8) + file;
-            printf("%3c", PceChar[pieceOn(sq)]);
+            std::cout << std::setw(3) << ".pnbrqk..PNBRQK"[pieceOn(sq)];
         }
-        printf("\n");
+        std::cout << "\n";
     }
-    printf("\n");
+    std::cout << std::endl;
 
     // Print FEN and zobrist key
     puts(BoardToFen(pos));
