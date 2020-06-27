@@ -19,7 +19,6 @@
 # General
 EXE    = weiss
 SRC    = *.cpp fathom/tbprobe.c noobprobe/noobprobe.c \
-	eval/evaluate_mir_inv_tools.cpp \
 	eval/nnue/evaluate_nnue.cpp \
 	eval/nnue/evaluate_nnue_learner.cpp \
 	eval/nnue/features/half_kp.cpp \
@@ -33,7 +32,6 @@ OUT    = ../bin/
 COMP   = g++
 
 # Defines
-DEV    = -DDEV
 POPCNT = -msse3 -mpopcnt
 PEXT   = $(POPCNT) -DUSE_PEXT -mbmi2
 
@@ -101,7 +99,7 @@ release:
 	$(RELEASE)-pext.exe     $(PEXT)
 
 dev:
-	$(BENCH)-dev $(PEXT) $(DEV)
+	$(BENCH)-dev $(PEXT) -DDEV
 
 gprof:
 	$(COMP) $(PFLAGS) $(SRC) $(LIBS) $(PEXT) -o $(OUT)$(EXE)-prof

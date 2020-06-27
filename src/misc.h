@@ -6,6 +6,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <mm_malloc.h>
 
 
 void prefetch(void* addr);

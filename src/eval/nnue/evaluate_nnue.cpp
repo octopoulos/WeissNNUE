@@ -197,9 +197,8 @@ struct alignas(16) ScoreKeyValue {
 // Sizeは2のべき乗。
 template <typename T, size_t Size>
 struct HashTable {
-  HashTable() { clear(); }
+  HashTable() : entries_{} {}
   T* operator [] (const Key k) { return entries_ + (static_cast<size_t>(k) & (Size - 1)); }
-  void clear() { memset(entries_, 0, sizeof(T)*Size); }
 
   // Size が 2のべき乗であることのチェック
   static_assert((Size & (Size - 1)) == 0, "");

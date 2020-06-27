@@ -150,7 +150,7 @@ void InitTT(Thread *threads) {
 
     // Allocation failed
     if (!TT.mem) {
-        printf("Allocating %" PRI_SIZET "MB for the transposition table failed.\n", MB);
+        std::cout << "Allocating " << MB << "MB for the transposition table failed.\n";
         exit(EXIT_FAILURE);
     }
 
@@ -160,6 +160,6 @@ void InitTT(Thread *threads) {
     TT.dirty = true;
     ClearTT(threads);
 
-    printf("HashTable init complete with %" PRI_SIZET " entries, using %" PRI_SIZET "MB.\n", TT.count, MB);
+    std::cout << "HashTable init complete with " << TT.count << " entries, using " << MB << "MB.\n";
     fflush(stdout);
 }
