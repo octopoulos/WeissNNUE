@@ -22,7 +22,8 @@
 #include <pthread.h>
 #include <setjmp.h>
 #include <stdbool.h>
-#include <cstdint>
+#include <stdint.h>
+#include <inttypes.h>
 
 #define NDEBUG
 #include <assert.h>
